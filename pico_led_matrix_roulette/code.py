@@ -1,6 +1,6 @@
 '''
 pico_led_matrix
-Raspberry Pi PicoでLED方向幕のルーレットを作ってみよう！
+Raspberry Pi PicoでLED方向幕のルーレットを自作してみよう！
 2023,2024
 author: 7M4MON
 https://nomulabo.com/pico_led_matrix/
@@ -92,12 +92,6 @@ def read_holdtime_pos():
     pos = pin_hex_sw_11.value + pin_hex_sw_12.value * 2 + pin_hex_sw_14.value * 4 + pin_hex_sw_18.value * 8
     return pos
 
-def sum_button_history():
-    n = 0
-    for s in button_history:
-        n += s
-    return n
-
 def det_button_pushed(single_mode = False):
     global button_history_index, last_button_history_sum
     det_pushed = False
@@ -108,7 +102,7 @@ def det_button_pushed(single_mode = False):
     button_history_index += 1
     if button_history_index > BUTTON_BUFFER_SIZE - 1:
         button_history_index = 0
-    sum = sum_button_history()
+    sum = sum(button_history)
     if last_button_history_sum == 0 and sum != 0:
         det_pushed = True
     last_button_history_sum = sum
@@ -121,8 +115,8 @@ index_sens = 0
 def det_train_passing():
     global index_sens, history_sens_0, history_sens_1
     thres = pin_train_sens_threshold.value >> 6     # 250くらいでOK
-    sens_0 = pin_train_sens_0.value >> 4      # high = 3670, low = 2000
-    sens_1 = pin_train_sens_1.value >> 4      # high = 3370, low = 2000
+    sens_0 = pin_train_sens_0.value >> 4      # high = 3670, low = 2000 (12bit ADC)
+    sens_1 = pin_train_sens_1.value >> 4      # high = 3370, low = 2000 (12bit ADC)
     avg_sens_0 = sum(history_sens_0) >> 3     # devide by 8
     history_sens_0[index_sens] = sens_0 # prepare next average
     history_sens_1[index_sens] = sens_1 # prepare next average
@@ -131,8 +125,8 @@ def det_train_passing():
         index_sens = 0
     avg_sens_1 = sum(history_sens_1) >> 3     # devide by 8
     retval = False
-    print("sens0:" + str(sens_0) + ", avg0:" + str(avg_sens_0) + " ,thres:" + str(thres))
-    print("sens1:" + str(sens_1) + ", avg1:" + str(avg_sens_1) + " ,index:" + str(index_sens))
+    print("sens0:" + str(sens_0) + ",avg0:" + str(avg_sens_0) + " ,thres:" + str(thres))
+    print("sens1:" + str(sens_1) + ",avg1:" + str(avg_sens_1) + " ,index:" + str(index_sens))
     if (avg_sens_0 - sens_0) > thres or (avg_sens_1 - sens_1) > thres:
         retval = True
     print("Detect:" + str(retval))
